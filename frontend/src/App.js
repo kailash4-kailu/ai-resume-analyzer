@@ -7,6 +7,7 @@ function App() {
   const [file, setFile] = useState(null);
   const [jobDescription, setJobDescription] = useState("");
   const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
 
@@ -21,16 +22,32 @@ function App() {
 
     try {
 
+      setLoading(true);
+
       const response = await axios.post(
         "https://ai-resume-analyzer-roal.onrender.com/analyze-resume/",
-        formData
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data"
+          }
+        }
       );
 
       setResult(response.data);
 
     } catch (error) {
-      console.error(error);
-      alert("Error analyzing resume");
+
+      console.error("API ERROR:", error);
+
+      if (error.response) {
+        alert(error.response.data.error || "Server error");
+      } else {
+        alert("Backend server may be waking up. Try again in a few seconds.");
+      }
+
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -38,12 +55,8 @@ function App() {
 
   let barClass = "progress-low";
 
-  if (score >= 70) {
-    barClass = "progress-high";
-  }
-  else if (score >= 40) {
-    barClass = "progress-medium";
-  }
+  if (score >= 70) barClass = "progress-high";
+  else if (score >= 40) barClass = "progress-medium";
 
   return (
     <div className="container">
@@ -54,6 +67,7 @@ function App() {
         <h3>Upload Resume</h3>
         <input
           type="file"
+          accept=".pdf"
           onChange={(e)=>setFile(e.target.files[0])}
         />
       </div>
@@ -69,8 +83,8 @@ function App() {
         />
       </div>
 
-      <button onClick={handleSubmit}>
-        Analyze Resume
+      <button onClick={handleSubmit} disabled={loading}>
+        {loading ? "Analyzing..." : "Analyze Resume"}
       </button>
 
       {result && (
@@ -80,14 +94,12 @@ function App() {
           <h2>ATS Score</h2>
 
           <div className="progress-container">
-
             <div
               className={`progress-bar ${barClass}`}
               style={{ width: `${score}%` }}
             >
               {score}%
             </div>
-
           </div>
 
           <h3>

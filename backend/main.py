@@ -9,27 +9,39 @@ import re
 import nltk
 from nltk.corpus import stopwords
 
-# -----------------------------------
-# Initialize FastAPI App
-# -----------------------------------
-app = FastAPI(title="AI Resume Analyzer")
 
+# -----------------------------------
+# Initialize FastAPI
+# -----------------------------------
+app = FastAPI(title="AI Resume Analyzer API")
+
+# -----------------------------------
+# CORS Configuration
+# -----------------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:3000",
+        "https://ai-resume-analyzer-flax-tau.vercel.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # -----------------------------------
-# Download Stopwords Safely (Render Safe)
+# NLTK Setup (Render Safe)
 # -----------------------------------
-nltk.download("stopwords", quiet=True)
+try:
+    nltk.data.find("corpora/stopwords")
+except LookupError:
+    nltk.download("stopwords")
+
 stop_words = set(stopwords.words("english"))
 
+
 # -----------------------------------
-# Known Technical Skills Database
+# Known Skills Database
 # -----------------------------------
 KNOWN_SKILLS = {
     "python", "java", "c", "c++", "mysql", "sql", "mongodb",
@@ -41,6 +53,7 @@ KNOWN_SKILLS = {
     "pandas", "numpy", "tensorflow", "pytorch",
     "scikit_learn", "data_science"
 }
+
 
 # -----------------------------------
 # Text Preprocessing
@@ -71,21 +84,28 @@ def preprocess_text(text):
 
     return " ".join(filtered_words)
 
-# -----------------------------------
-# Root Endpoint
-# -----------------------------------
-@app.get("/")
-def read_root():
-    return {"message": "AI Resume Analyzer Backend Running"}
 
 # -----------------------------------
-# Resume Upload Endpoint
+# Health Check
+# -----------------------------------
+@app.get("/")
+def root():
+    return {"status": "AI Resume Analyzer API Running"}
+
+
+@app.get("/health")
+def health():
+    return {"status": "healthy"}
+
+
+# -----------------------------------
+# Upload Resume Endpoint
 # -----------------------------------
 @app.post("/upload-resume/")
 async def upload_resume(file: UploadFile = File(...)):
 
     if not file.filename.endswith(".pdf"):
-        return {"error": "Only PDF files are allowed"}
+        return {"error": "Only PDF files allowed"}
 
     try:
         contents = await file.read()
@@ -104,6 +124,7 @@ async def upload_resume(file: UploadFile = File(...)):
         "filename": file.filename,
         "cleaned_text_preview": cleaned_text[:1000]
     }
+
 
 # -----------------------------------
 # Resume Match Endpoint
@@ -143,8 +164,9 @@ def match_resume(data: ResumeRequest):
         "missing_skills": missing_skills
     }
 
+
 # -----------------------------------
-# Full Resume Analysis Endpoint
+# Full Resume Analysis
 # -----------------------------------
 @app.post("/analyze-resume/")
 async def analyze_resume(
@@ -153,7 +175,7 @@ async def analyze_resume(
 ):
 
     if not file.filename.endswith(".pdf"):
-        return {"error": "Only PDF files are allowed"}
+        return {"error": "Only PDF files allowed"}
 
     try:
         contents = await file.read()
@@ -169,14 +191,12 @@ async def analyze_resume(
     resume = preprocess_text(raw_text)
     job_desc = preprocess_text(job_description)
 
-    # Skill Extraction
     resume_words = {skill for skill in KNOWN_SKILLS if skill in resume}
     job_words = {skill for skill in KNOWN_SKILLS if skill in job_desc}
 
     matched_skills = list(resume_words.intersection(job_words))
     missing_skills = list(job_words - resume_words)
 
-    # TF-IDF Similarity
     vectorizer = TfidfVectorizer()
 
     vectors = vectorizer.fit_transform([
@@ -189,42 +209,32 @@ async def analyze_resume(
         vectors[1:2]
     )[0][0]
 
-    score_percentage = round(float(similarity_score) * 100, 2)
+    score = round(float(similarity_score) * 100, 2)
 
-    # Convert skill tokens back
-    matched_skills_display = [
-        skill.replace("_", " ") for skill in matched_skills
-    ]
-
-    missing_skills_display = [
-        skill.replace("_", " ") for skill in missing_skills
-    ]
-
-    # Strength Category
-    if score_percentage >= 70:
+    if score >= 70:
         strength = "Strong Match"
-    elif score_percentage >= 40:
+    elif score >= 40:
         strength = "Moderate Match"
     else:
         strength = "Low Match"
 
-    # Recommendation
-    if missing_skills_display:
-        recommendation = "Consider adding missing skills to improve ATS compatibility."
-    else:
-        recommendation = "Your resume aligns well with this job description."
+    matched_display = [s.replace("_", " ") for s in matched_skills]
+    missing_display = [s.replace("_", " ") for s in missing_skills]
+
+    recommendation = (
+        "Consider adding missing skills to improve ATS compatibility."
+        if missing_display
+        else "Your resume aligns well with this job description."
+    )
 
     return {
-
         "analysis_summary": {
-            "ats_score_percentage": score_percentage,
+            "ats_score_percentage": score,
             "strength": strength
         },
-
         "skills_analysis": {
-            "matched_skills": matched_skills_display,
-            "missing_skills": missing_skills_display
+            "matched_skills": matched_display,
+            "missing_skills": missing_display
         },
-
         "recommendations": recommendation
     }

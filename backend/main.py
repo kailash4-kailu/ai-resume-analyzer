@@ -16,20 +16,17 @@ app = FastAPI(title="AI Resume Analyzer")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Restrict in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # -----------------------------------
-# Load Stopwords Safely
+# Download Stopwords Safely (Render Safe)
 # -----------------------------------
-try:
-    stop_words = set(stopwords.words("english"))
-except LookupError:
-    nltk.download("stopwords")
-    stop_words = set(stopwords.words("english"))
+nltk.download("stopwords", quiet=True)
+stop_words = set(stopwords.words("english"))
 
 # -----------------------------------
 # Known Technical Skills Database
@@ -109,11 +106,12 @@ async def upload_resume(file: UploadFile = File(...)):
     }
 
 # -----------------------------------
-# Resume Match Endpoint (Text)
+# Resume Match Endpoint
 # -----------------------------------
 class ResumeRequest(BaseModel):
     resume_text: str
     job_description: str
+
 
 @app.post("/match-resume/")
 def match_resume(data: ResumeRequest):

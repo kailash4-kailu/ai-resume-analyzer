@@ -1,0 +1,78 @@
+body {
+  background-color: #f4f6f8;
+}
+
+.container {
+  max-width: 900px;
+  margin: auto;
+  padding: 30px;
+  font-family: Arial, sans-serif;
+}
+
+.title {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.section {
+  margin-bottom: 25px;
+}
+
+textarea {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+}
+
+button {
+  background-color: #2f80ed;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+button:hover {
+  background-color: #1c60b8;
+}
+
+.result-box {
+  margin-top: 30px;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.score {
+  font-size: 26px;
+  color: #2f80ed;
+}
+.progress-container {
+  width: 100%;
+  background-color: #e0e0e0;
+  border-radius: 10px;
+  margin: 10px 0 20px 0;
+  height: 25px;
+}
+
+.progress-bar {
+  height: 100%;
+  border-radius: 10px;
+  text-align: center;
+  color: white;
+  font-weight: bold;
+  line-height: 25px;
+}
+
+.progress-low {
+  background-color: #e74c3c;
+}
+
+.progress-medium {
+  background-color: #f39c12;
+}
+
+.progress-high {
+  background-color: #2ecc71;
+}

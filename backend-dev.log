@@ -1,0 +1,7 @@
+INFO:     127.0.0.1:56777 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56780 - "POST /analyze-resume/ HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:60715 - "POST /analyze-resume/ HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:51053 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60903 - "POST /analyze-resume/ HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:56888 - "POST /analyze-resume/ HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:55250 - "POST /analyze-resume/ HTTP/1.1" 200 OK
